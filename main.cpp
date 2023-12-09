@@ -99,6 +99,9 @@ class Rocket {
 	{}
 
 	void Out() {
+		if (y.Value() < 0) {
+			Stop();
+		}
 		Print("%g %g %g\n", T.Value(), v.Value(), y.Value());
 	}
 };
@@ -116,7 +119,7 @@ Sampler S(Sample, 1e-1);
 
 int main() {
 	SetOutput("sim.dat");
-	Init(0, 15);
+	Init(0, 100);
 	SetAccuracy(1e-3);
 
 	Run();
