@@ -3,10 +3,10 @@
 #include "simlib.h"
 
 // mass
-double initial_mass = 0.15;
+double initial_mass = 0.5;
 
 // thrust force
-double thrust_force = 100;
+double thrust_force = 10;
 double burnout_time = 10;
 double specific_impulse = 2500;
 
@@ -18,52 +18,98 @@ double air_density_constant = 1.2;
 double drag_coeficient = 0.3;
 double rocket_area = 0.000377;
 
-class Rocket {
-
-	Integrator mass;
-	Integrator velocity;
-	Integrator altitude;
-
+class ThrustForce : public aContiBlock {	
+	
+	double thrust_force, burnout_time;
+	
 	public:
+	ThrustForce(double _tf, double _bt) : thrust_force(_tf), burnout_time(_bt) {}
 
-	Rocket() :
-		mass(- current_thrust_force() / specific_impulse, initial_mass),
-		velocity(get_acceleration(), 0),
-		altitude(velocity, 0)
-	{}
-
-	double current_thrust_force() {
-		if (T.Value() < burnout_time) {
-			return thrust_force;
+	double Value() {
+		if (T.Value() < this->burnout_time) {
+			return this->thrust_force;
 		}
 		return 0;
 	}
 
-	double current_gravity_force() {
-		return mass.Value() * gravity_constant;
-	}
-
-	double current_drag_force() {
-		return 0.5 * air_density_constant * drag_coeficient * rocket_area * velocity.Value() * velocity.Value();
-	}
-
-	double current_net_force() {
-		return current_thrust_force() - current_drag_force() - current_gravity_force();
-	}
-
-	double get_acceleration() {
-		return current_net_force() / mass.Value();
-	}
-
-	void out() {
-		Print("%g %g %g %g\n", T.Value(), velocity.Value(), altitude.Value(), current_gravity_force());
+	void Out() {
+		Print("[%g]\tthrust force = %g\n", T.Value(), this->Value());
 	}
 };
 
-Rocket rocket;
+class Mass : public aContiBlock {
+	
+	Integrator mass;
 
-void Sample() { 
-  rocket.out();
+	public:
+	Mass(Input thrust_force, double initial_mass, double specific_impulse) : 
+		mass(- thrust_force / specific_impulse, initial_mass) 
+	{}
+
+	double Value() {
+		if (mass.Value() <= 0) {
+			Print("invalid mass\n");
+			Abort();
+		}
+		return mass.Value();
+	}
+
+	void Out() {
+		Print("[%g]\tmass = %g\n", T.Value(), this->Value());
+	}
+};
+
+class GravityForce : public aContiBlock {
+
+	Expression gravity_force;
+
+	public:
+	GravityForce(Input mass, double gravity_constant) :
+		gravity_force(mass * gravity_constant)
+	{}
+
+	double Value() {
+		return this->gravity_force.Value();
+	}
+
+	void Out() {
+		Print("[%g]\tgravitaty force = %g\n", T.Value(), this->Value());
+	}
+};
+
+class Rocket {
+
+	Expression drag_force;
+	Expression net_force;
+
+	Expression a;
+	Integrator v;
+	Integrator y;
+
+	public:
+	Rocket(
+		Input mass, Input thrust_force, Input gravity_force,
+		double air_density_constant, double drag_coeficient, double rocket_area
+	) : 
+		drag_force(0.5 * air_density_constant * drag_coeficient * rocket_area * v * v),
+		net_force(thrust_force - gravity_force - drag_force),
+		a(net_force / mass),
+		v(a, 0),
+		y(v, 0)
+	{}
+
+	void Out() {
+		Print("%g %g %g\n", T.Value(), v.Value(), y.Value());
+	}
+};
+
+ThrustForce tf(thrust_force, burnout_time);
+Mass m(tf, initial_mass, specific_impulse);
+GravityForce gf(m, gravity_constant);
+Rocket r(m, tf, gf, air_density_constant, drag_coeficient, rocket_area);
+
+void Sample() {
+	r.Out();
 }
 
 Sampler S(Sample, 1e-1);
