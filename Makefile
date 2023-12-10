@@ -4,3 +4,4 @@ all:
 
 run: all
 	./sim
+	python visualization.py
