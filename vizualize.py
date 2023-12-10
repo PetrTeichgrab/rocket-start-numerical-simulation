@@ -16,17 +16,14 @@ fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 12), sharex=True)
 ax1.plot(data['Time'], data['Velocity'], marker='o')
 ax1.set_title('Velocity vs Time')
 ax1.set_ylabel('Velocity (m/s)')
+ax1.set_xlabel('Time (s)')
 
 # Graf výšky
 ax2.plot(data['Time'], data['Altitude'], marker='o')
 ax2.set_title('Altitude vs Time')
 ax2.set_ylabel('Altitude (m)')
+ax2.set_xlabel('Time (s)')
 
-# Graf zrychlení
-# ax3.plot(data['Time'], data['Acceleration'], marker='o')
-# ax3.set_title('Acceleration vs Time')
-# ax3.set_xlabel('Time (s)')
-# ax3.set_ylabel('Acceleration (m/s^2)')
 
 fig, ax = plt.subplots(1, 1)
 
@@ -39,7 +36,8 @@ def animate(i):
     # Nastavení os
     ax.set_ylim(0, data["Altitude"][len(data)-1]+300)
     ax.plot(max(data["Altitude"]), color='green', label='original', marker='^')
-    ax.set_ylabel('Výška')
+    ax.set_ylabel('Altitude (m)')
+     ax.set_xlabel('Time (s)')
 
 ani = animation.FuncAnimation(fig, animate, frames=len(data), interval=150, repeat=True)
 

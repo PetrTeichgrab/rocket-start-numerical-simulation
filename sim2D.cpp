@@ -10,11 +10,11 @@
 double initial_mass = 0.1134;
 
 // thrust force
-bool use_thrust_curve = false;
+bool use_thrust_curve = true;
 std::string thrust_curve_input = "data/f15_thrust_curve.dat";
-double thrust_force = 3.9;
+double thrust_force = 5.0;
 double burnout_time = 2.0;
-double specific_impulse = 700;
+double specific_impulse = 814.8;
 
 // gravity force
 double gravity_constant = 9.81;
@@ -26,7 +26,7 @@ double rocket_area = 0.0010515546;
 
 Constant2D zero(0, 0);
 
-double launch_angle = 0;
+double launch_angle = 0.174532925199433;
 double launch_pole_length = 2;
 
 class ThrustForce : public aContiBlock2D {
@@ -102,7 +102,7 @@ class GravityForce : public aContiBlock2D {
 
 	Value2D Value() {
 		double calc = mass.Value() * gravity_constant;
-		return Value2D(calc * sin(flight_angle.Value().x()), calc * cos(flight_angle.Value().x()));
+		return Value2D(0, calc);
 	}
 
 	void SetInput(Input2D angle) {
@@ -145,7 +145,7 @@ class Position : public aContiBlock2D {
 
 	Value2D Value() {
 
-		if (p.Value().y() < -10) {
+		if (p.Value().y() < 0) {
 			Stop();
 		}
 
