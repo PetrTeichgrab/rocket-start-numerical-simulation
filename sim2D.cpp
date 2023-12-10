@@ -12,9 +12,9 @@ double initial_mass = 0.1134;
 // thrust force
 bool use_thrust_curve = false;
 std::string thrust_curve_input = "data/f15_thrust_curve.dat";
-double thrust_force = 14.5;
-double burnout_time = 3.5;
-double specific_impulse = 826.83;
+double thrust_force = 3.9;
+double burnout_time = 2.0;
+double specific_impulse = 700;
 
 // gravity force
 double gravity_constant = 9.81;
@@ -72,17 +72,23 @@ class DragForce : public aContiBlock2D {
 
 class Mass : public aContiBlock {
 
+	double last_known_mass;
 	Expression2D thrust_force;
 	Integrator mass;
 
 	public:
 	Mass(Input2D _tf) : 
+		last_known_mass(0),
 		thrust_force(_tf),
 		mass(-sqrt(pow(thrust_force.Value().x(), 2) + pow(thrust_force.Value().y(), 2)) / specific_impulse, initial_mass) 
 	{}
 
 	double Value() {
-		return mass.Value();
+		if (T.Value() < burnout_time) {
+			last_known_mass = mass.Value();
+			return mass.Value();
+		}
+		return last_known_mass;
 	}
 };
 
@@ -170,7 +176,6 @@ class FlightAngle : public aContiBlock2D {
 	}
 };
 
-
 ThrustForce F_t;
 DragForce F_d;
 Mass m(F_t);
@@ -181,6 +186,7 @@ Position position(velocity);
 FlightAngle flight_angle(velocity, position);
 
 void Sample() {	
+	// Print("time: %g\n", T.Value());
 	// Print("thrust force: %g %g\n", F_t.Value().x(), F_t.Value().y());
 	// Print("drag force: %g %g\n", F_d.Value().x(), F_d.Value().y());
 	// Print("mass: %g\n", m.Value());
