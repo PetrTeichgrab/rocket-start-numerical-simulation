@@ -6,23 +6,24 @@
 
 #include "simlib.h"
 
+//falcon 9 parameters
 // mass
-double initial_mass = 0.5;
+double initial_mass = 0.1134;
 
 // thrust force
 bool use_thrust_curve = false;
 std::string thrust_curve_input = "data/f15_thrust_curve.dat";
-double thrust_force = 14.4;
-double burnout_time = 3.5;
-double specific_impulse = 826.666666667;
+double thrust_force = 3.9;
+double burnout_time = 2.0;
+double specific_impulse = 700;
 
 // gravity force
-double gravity_constant = 10;
+double gravity_constant = 9.81;
 
 // drag force
-double air_density_constant = 1.2;
-double drag_coeficient = 0.3;
-double rocket_area = 0.000377;
+double air_density_constant = 1.225;
+double drag_coeficient = 0.75;
+double rocket_area = 0.0010515546;
 
 class ThrustForce : public aContiBlock {
 	

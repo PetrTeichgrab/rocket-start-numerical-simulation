@@ -5,6 +5,7 @@
 #include "simlib.h"
 #include "simlib2D.h"
 
+//falcon 9 parameters
 // mass
 double initial_mass = 0.1134;
 
