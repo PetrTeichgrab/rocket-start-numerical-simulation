@@ -13,9 +13,9 @@ double initial_mass = 0.1134;
 // thrust force
 bool use_thrust_curve = false;
 std::string thrust_curve_input = "data/f15_thrust_curve.dat";
-double thrust_force = 14.5;
-double burnout_time = 3.5;
-double specific_impulse = 826.83;
+double thrust_force = 3.9;
+double burnout_time = 2.0;
+double specific_impulse = 700;
 
 // gravity force
 double gravity_constant = 9.81;
