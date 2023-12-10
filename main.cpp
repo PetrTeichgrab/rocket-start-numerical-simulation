@@ -3,13 +3,14 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+
 #include "simlib.h"
 
 // mass
 double initial_mass = 0.5;
 
 // thrust force
-bool use_thrust_curve = true;
+bool use_thrust_curve = false;
 std::string thrust_curve_input = "data/f15_thrust_curve.dat";
 double thrust_force = 14.4;
 double burnout_time = 3.5;
@@ -23,7 +24,7 @@ double air_density_constant = 1.2;
 double drag_coeficient = 0.3;
 double rocket_area = 0.000377;
 
-class ThrustForce : public aContiBlock {	
+class ThrustForce : public aContiBlock {
 	
 	int index;
 	std::vector<std::pair<double, double>> thrust_curve_values;
