@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+
 #include "simlib.h"
 
 //falcon 9 parameters
@@ -10,7 +11,7 @@
 double initial_mass = 0.1134;
 
 // thrust force
-bool use_thrust_curve = true;
+bool use_thrust_curve = false;
 std::string thrust_curve_input = "data/f15_thrust_curve.dat";
 double thrust_force = 14.5;
 double burnout_time = 3.5;
@@ -24,7 +25,7 @@ double air_density_constant = 1.225;
 double drag_coeficient = 0.75;
 double rocket_area = 0.0010515546;
 
-class ThrustForce : public aContiBlock {	
+class ThrustForce : public aContiBlock {
 	
 	int index;
 	std::vector<std::pair<double, double>> thrust_curve_values;
