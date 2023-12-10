@@ -1,14 +1,19 @@
 
 #include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
 #include "simlib.h"
 
 // mass
 double initial_mass = 0.5;
 
 // thrust force
-double thrust_force = 10;
-double burnout_time = 10;
-double specific_impulse = 2500;
+bool use_thrust_curve = true;
+std::string thrust_curve_input = "data/f15_thrust_curve.dat";
+double thrust_force = 14.4;
+double burnout_time = 3.5;
+double specific_impulse = 826.666666667;
 
 // gravity force
 double gravity_constant = 10;
@@ -20,67 +25,58 @@ double rocket_area = 0.000377;
 
 class ThrustForce : public aContiBlock {	
 	
-	double thrust_force, burnout_time;
-	
+	int index;
+	std::vector<std::pair<double, double>> thrust_curve_values;
+
 	public:
-	ThrustForce(double _tf, double _bt) : thrust_force(_tf), burnout_time(_bt) {}
+	ThrustForce() : index(0) {
+		if (use_thrust_curve) {
+			std::ifstream file(thrust_curve_input);
+			
+			if (!file.is_open()) {
+				std::cerr << "Error opening the file!" << std::endl;
+				return;
+			}
+
+			std::string line;
+			while (std::getline(file, line)) {
+				std::istringstream iss(line);
+				double value1, value2;
+
+				if (iss >> value1 >> value2) {
+					thrust_curve_values.push_back(std::make_pair(value1, value2));
+				}
+			}
+
+			file.close();
+		}
+	}
 
 	double Value() {
-		if (T.Value() < this->burnout_time) {
-			return this->thrust_force;
+		if (use_thrust_curve) {
+			std::pair<double, double> value = thrust_curve_values[index];
+			if (T.Value() < burnout_time && T.Value() < value.first) {
+				return value.second;
+			} else if (T.Value() < burnout_time) {
+				value = thrust_curve_values[index++];
+				return value.second;
+			}
+		} else {
+			if (T.Value() < burnout_time) {
+				return thrust_force;
+			}
 		}
 		return 0;
-	}
-
-	void Out() {
-		Print("[%g]\tthrust force = %g\n", T.Value(), this->Value());
-	}
-};
-
-class Mass : public aContiBlock {
-	
-	Integrator mass;
-
-	public:
-	Mass(Input thrust_force, double initial_mass, double specific_impulse) : 
-		mass(- thrust_force / specific_impulse, initial_mass) 
-	{}
-
-	double Value() {
-		if (mass.Value() <= 0) {
-			Print("invalid mass\n");
-			Abort();
-		}
-		return mass.Value();
-	}
-
-	void Out() {
-		Print("[%g]\tmass = %g\n", T.Value(), this->Value());
-	}
-};
-
-class GravityForce : public aContiBlock {
-
-	Expression gravity_force;
-
-	public:
-	GravityForce(Input mass, double gravity_constant) :
-		gravity_force(mass * gravity_constant)
-	{}
-
-	double Value() {
-		return this->gravity_force.Value();
-	}
-
-	void Out() {
-		Print("[%g]\tgravitaty force = %g\n", T.Value(), this->Value());
 	}
 };
 
 class Rocket {
 
 	Expression drag_force;
+	Expression gravity_force;
 	Expression net_force;
+
+	Integrator mass;
 
 	Expression a;
 	Integrator v;
@@ -88,9 +84,10 @@ class Rocket {
 
 	public:
 	Rocket(
-		Input mass, Input thrust_force, Input gravity_force,
-		double air_density_constant, double drag_coeficient, double rocket_area
+		Input thrust_force
 	) : 
+		mass(- thrust_force / specific_impulse, initial_mass),
+		gravity_force(mass * gravity_constant),
 		drag_force(0.5 * air_density_constant * drag_coeficient * rocket_area * v * v),
 		net_force(thrust_force - gravity_force - drag_force),
 		a(net_force / mass),
@@ -99,17 +96,20 @@ class Rocket {
 	{}
 
 	void Out() {
+		if (mass.Value() < 0) {
+			Abort();
+		}
+
 		if (y.Value() < 0) {
 			Stop();
 		}
+
 		Print("%g %g %g\n", T.Value(), v.Value(), y.Value());
 	}
 };
 
-ThrustForce tf(thrust_force, burnout_time);
-Mass m(tf, initial_mass, specific_impulse);
-GravityForce gf(m, gravity_constant);
-Rocket r(m, tf, gf, air_density_constant, drag_coeficient, rocket_area);
+ThrustForce tf;
+Rocket r(tf);
 
 void Sample() {
 	r.Out();
